@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: numba
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run migrate && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: numba-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: TEST_MODE
+        value: "true"
+      - key: PROVIDER_API_KEY
+        sync: false
+databases:
+  - name: numba-db
+    plan: free

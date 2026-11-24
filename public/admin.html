@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Numba Admin</title>
+<style>
+:root{--bg:#fafaf9;--s:#fff;--tx:#18181b;--mu:#71717a;--pr:#ea580c;--bd:#e4e4e7;--ok:#16a34a;--bad:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a0b0e;--s:#12141a;--tx:#f4f4f5;--mu:#9ca3af;--bd:#23262f;--ok:#4ade80;--bad:#f87171}}
+html{font-size:14px;scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+.w{max-width:1100px;margin:auto;padding:0 16px}.mu{color:var(--mu)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1.1rem;text-transform:uppercase}.logo i{background:var(--pr);color:#fff;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-style:normal}.logo b{color:var(--pr)}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:9px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:.9rem}.btn.g{background:var(--s);color:var(--tx);border:1px solid var(--bd)}.btn.sm{padding:5px 10px;font-size:.8rem}
+.card{background:var(--s);border:1px solid var(--bd);border-radius:14px;padding:16px}
+input{width:100%;padding:10px;border-radius:9px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:1rem}label{display:block;font-size:.8rem;color:var(--mu);margin:10px 0 4px}
+header{border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg);z-index:5}header .w{display:flex;align-items:center;justify-content:space-between;height:56px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}.grid b{display:block;font-size:1.3rem;margin-top:4px}
+.tabs{display:flex;gap:8px;margin:6px 0 14px}.tabs .btn{background:var(--s);color:var(--mu);border:1px solid var(--bd)}.tabs .btn.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mu);font-weight:600}
+.pill{font-size:.7rem;padding:2px 8px;border-radius:99px;background:var(--bd)}.pill.ok{background:rgba(74,222,128,.2);color:var(--ok)}.pill.bad{background:rgba(248,113,113,.2);color:var(--bad)}.pill.t{background:rgba(234,88,12,.18);color:var(--pr)}
+#msg{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 14px;border-radius:9px;display:none;z-index:9;max-width:90vw}
+</style></head><body>
+<div id="login" class="w" style="max-width:400px;margin-top:12vh">
+ <div class="logo" style="justify-content:center;margin-bottom:6px"><i>N</i><span>Num<b>ba</b></span></div>
+ <p class="mu" style="text-align:center;margin:0 0 16px">Admin sign in</p>
+ <form class="card" onsubmit="signIn(event)"><label>Email</label><input id="em" type="email" autocomplete="username" required><label>Password</label><input id="pw" type="password" autocomplete="current-password" required>
+ <button class="btn" style="width:100%;margin-top:16px;padding:12px">Sign in</button><p id="err" style="color:var(--bad);text-align:center;margin:10px 0 0"></p></form>
+</div>
+<div id="app" style="display:none">
+ <header><div class="w"><div class="logo"><i>N</i><span>Num<b>ba</b></span> <span class="mu" style="font-weight:600;text-transform:none">Admin</span></div><div><span id="tm" class="pill t" style="display:none;margin-right:8px">test mode</span><button class="btn g sm" onclick="signOut()">Sign out</button></div></div></header>
+ <main class="w"><div class="grid" id="cards"></div>
+  <div class="tabs"><button class="btn sm on" data-t="orders" onclick="tab('orders')">Orders</button><button class="btn sm" data-t="users" onclick="tab('users')">Users</button><button class="btn sm" data-t="prices" onclick="tab('prices')">Prices</button></div>
+  <div id="view"></div><div style="height:60px"></div></main>
+</div>
+<div id="msg"></div>
+<script>
+const $=id=>document.getElementById(id),N=k=>"₦"+Math.round(Number(k)/100).toLocaleString("en-NG");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let TOK="";try{TOK=localStorage.getItem("nb_admin")||""}catch(e){}
+function say(t){const e=$("msg");e.textContent=t;e.style.display="block";clearTimeout(e._t);e._t=setTimeout(()=>e.style.display="none",3000)}
+async function api(p,b){const r=await fetch(p,{method:b===undefined?"GET":"POST",headers:Object.assign({"Content-Type":"application/json"},TOK?{Authorization:"Bearer "+TOK}:{}),body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(j.error||"Something went wrong");e.status=r.status;throw e}return j}
+function signOut(){TOK="";try{localStorage.removeItem("nb_admin")}catch(e){}$("app").style.display="none";$("login").style.display="";$("pw").value=""}
+async function signIn(e){e.preventDefault();$("err").textContent="";
+ try{const r=await api("/auth/login",{email:$("em").value.trim(),password:$("pw").value});TOK=r.token;await api("/admin/stats");try{localStorage.setItem("nb_admin",TOK)}catch(x){}await start()}
+ catch(x){TOK="";$("err").textContent=x.status==403?"This account is not an admin.":x.message}}
+async function start(){const s=await api("/admin/stats");$("login").style.display="none";$("app").style.display="";$("tm").style.display=s.test_mode?"":"none";
+ $("cards").innerHTML=[["Customers",s.customers],["Numbers sold",s.sold],["Revenue",N(s.revenue_kobo)],["Total funded",N(s.funded_kobo)],["Wallet balances",N(s.wallet_liability_kobo)],["Waiting orders",s.waiting],["Test orders",s.test_orders],["Banned users",s.banned]].map(c=>`<div class="card"><span class="mu">${c[0]}</span><b>${esc(c[1])}</b></div>`).join("");tab(CUR||"orders")}
+let CUR="orders";
+async function tab(t){CUR=t;document.querySelectorAll(".tabs .btn").forEach(b=>b.classList.toggle("on",b.dataset.t==t));const v=$("view");v.innerHTML='<p class="mu">Loading…</p>';
+ try{if(t=="orders"){const l=await api("/admin/orders");v.innerHTML=tbl(["#","User","Service","Country","Number","Status","Price","When"],l.map(o=>[o.id,esc(o.email),esc(o.service),esc(String(o.country).toUpperCase()),esc(o.number||"-"),`<span class="pill ${o.status=="received"?"ok":o.status=="waiting"?"t":""}">${esc(o.status)}</span>${o.is_test?' <span class="pill t">test</span>':""}`,N(o.price_kobo),esc(new Date(o.created_at).toLocaleString())]))}
+ else if(t=="users"){const l=await api("/admin/users");v.innerHTML=tbl(["#","Email","Name","Balance","Joined","Status",""],l.map(u=>[u.id,esc(u.email),esc(u.full_name||"-"),N(u.balance_kobo),esc(new Date(u.created_at).toLocaleDateString()),u.role=="admin"?'<span class="pill t">admin</span>':u.banned?'<span class="pill bad">banned</span>':'<span class="pill ok">active</span>',u.role=="admin"?"":`<button class="btn g sm" onclick="ban(${Number(u.id)},${u.banned?0:1})">${u.banned?"Unban":"Ban"}</button>`]))}
+ else{const l=await api("/admin/prices");v.innerHTML=`<div class="card" style="max-width:460px"><b>Set a service price</b><p class="mu" style="margin:4px 0 0">One price for every country, in naira. It replaces the supplier price for that service.</p><label>Service name (lowercase, like whatsapp)</label><input id="ps" placeholder="whatsapp"><label>Price (₦)</label><input id="pp" type="number" min="100" placeholder="2100"><button class="btn" style="margin-top:14px" onclick="setPrice()">Save price</button></div><div style="height:14px"></div>`+tbl(["Service","Price"],l.map(p=>[esc(p.service),N(p.price_kobo)]))}}
+ catch(x){if(x.status==401||x.status==403)return signOut();v.innerHTML='<p class="mu">'+esc(x.message)+'</p>'}}
+const tbl=(h,r)=>`<div class="card tw" style="padding:6px 10px"><table><tr>${h.map(x=>"<th>"+x+"</th>").join("")}</tr>${r.map(x=>"<tr>"+x.map(c=>"<td>"+c+"</td>").join("")+"</tr>").join("")||'<tr><td class="mu">Nothing yet</td></tr>'}</table></div>`;
+async function ban(id,on){try{await api("/admin/"+(on?"ban":"unban")+"/"+id,{});say(on?"User banned":"User unbanned");tab("users")}catch(x){say(x.message)}}
+async function setPrice(){try{await api("/admin/prices",{service:$("ps").value.trim().toLowerCase(),naira:+$("pp").value});say("Price saved");tab("prices")}catch(x){say(x.message)}}
+if(TOK)start().catch(()=>signOut());
+</script></body></html>

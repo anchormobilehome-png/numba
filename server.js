@@ -37,7 +37,7 @@ app.get('/robots.txt', (req, res) => res.type('text/plain').send(`User-agent: *\
 app.get('/sitemap.xml', (req, res) => res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl()}/</loc></url></urlset>`));
 const isAdminEmail = e => !!process.env.ADMIN_EMAIL && String(e).toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase();
 // While TEST_MODE is on, real payments are blocked so nobody is charged real money for a generated number.
-const testBlocked = () => provider.TEST && PS.startsWith('sk_live_');
+const testBlocked = () => provider.TEST && PS.startsWith('sk_test_');
 if (provider.TEST) console.warn(testBlocked() ? 'TEST_MODE is on but PAYSTACK_SECRET_KEY is a LIVE key: top-ups and purchases are blocked. Use an sk_test_ key.' : 'TEST_MODE is on: purchases use generated numbers and codes.');
 
 const auth = wrap2(async (req) => {

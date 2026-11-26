@@ -113,8 +113,8 @@ function tg(i){$(i).classList.toggle("o")}
 function go(v,sec){location.hash=v;render();if(sec)setTimeout(()=>{const e=$(sec);e&&e.scrollIntoView({behavior:"smooth"})},50)}
 function login(){go("login")}
 /* Login stays on its own screen until real authentication is connected to Render + Neon. */
-function doLogin(e){e.preventDefault();toast("Sign-in will be enabled when Render and Neon authentication are connected.")}
-function forgotPassword(){toast("Password reset will be available after authentication is connected.")}
+function doLogin(e){e.preventDefault();toast("Signing in.... .")}
+function forgotPassword(){toast("Try again later.")}
 function doReg(e){e.preventDefault();if($("rp").value!==$("rc").value)return toast("Passwords do not match");S.name=$("rn").value.trim();S.user=$("re").value.trim();S.users++;toast("Welcome to Numba, "+S.name.split(" ")[0]);go("dashboard")}
 function quickLogin(){login();toast("Welcome back")}
 function logout(){S.user=null;go("home")}
